@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- 対象はデスクトップ OS のみ。PDFtoImage のプラットフォーム属性による警告を抑止する -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Avalonia 12.1.3 と PDFtoImage 5.2.1 が要求する SkiaSharp 3 系に揃える（仕様 11.1） -->
+    <PackageReference Include="SkiaSharp" Version="3.119.4" />
+    <PackageReference Include="PDFtoImage" Version="5.2.1" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="MangaViewer.Core.Tests" />
+  </ItemGroup>
+</Project>

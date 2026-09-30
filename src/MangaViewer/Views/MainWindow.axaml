@@ -1,0 +1,99 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MangaViewer.ViewModels"
+        xmlns:c="using:MangaViewer.Controls"
+        x:Class="MangaViewer.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="{Binding Title}"
+        Width="1200" Height="900"
+        MinWidth="320" MinHeight="240"
+        Background="{Binding BackgroundColor, Converter={x:Static c:ColorToBrushConverter.Instance}}"
+        DragDrop.AllowDrop="True">
+  <DockPanel>
+    <Menu x:Name="MainMenu" DockPanel.Dock="Top" IsVisible="{Binding IsChromeVisible}">
+      <MenuItem Header="ファイル(_F)">
+        <MenuItem Header="開く..." InputGesture="Ctrl+O" Click="OnOpenFileClick" />
+        <MenuItem Header="フォルダを開く..." Click="OnOpenFolderClick" />
+        <MenuItem Header="閉じる" InputGesture="Ctrl+W" Command="{Binding CloseFileCommand}" IsEnabled="{Binding HasDocument}" />
+        <Separator />
+        <MenuItem Header="次のファイル" InputGesture="Ctrl+Right" Command="{Binding NextFileCommand}" IsEnabled="{Binding HasDocument}" />
+        <MenuItem Header="前のファイル" InputGesture="Ctrl+Left" Command="{Binding PreviousFileCommand}" IsEnabled="{Binding HasDocument}" />
+        <Separator />
+        <MenuItem Header="終了" Click="OnExitClick" />
+      </MenuItem>
+      <MenuItem Header="表示(_V)">
+        <MenuItem Header="単ページ" InputGesture="1" ToggleType="Radio" GroupName="ViewMode" IsChecked="{Binding IsSingleMode, Mode=TwoWay}" />
+        <MenuItem Header="見開き" InputGesture="2" ToggleType="Radio" GroupName="ViewMode" IsChecked="{Binding IsSpreadMode, Mode=TwoWay}" />
+        <Separator />
+        <MenuItem Header="右読み（右綴じ）" ToggleType="Radio" GroupName="Direction" IsChecked="{Binding IsRightToLeft, Mode=TwoWay}" />
+        <MenuItem Header="左読み（左綴じ）" ToggleType="Radio" GroupName="Direction" IsChecked="{Binding IsLeftToRight, Mode=TwoWay}" />
+        <Separator />
+        <MenuItem Header="1ページずらし" InputGesture="D" ToggleType="CheckBox" IsChecked="{Binding Shift, Mode=TwoWay}" />
+        <MenuItem Header="表紙単独表示" InputGesture="C" ToggleType="CheckBox" IsChecked="{Binding CoverSingle, Mode=TwoWay}" />
+        <MenuItem Header="横長ページを単独表示" ToggleType="CheckBox" IsChecked="{Binding AutoSingleLandscape, Mode=TwoWay}" />
+        <Separator />
+        <MenuItem Header="ウィンドウ全体に合わせる" InputGesture="Ctrl+0" ToggleType="Radio" GroupName="Fit" IsChecked="{Binding IsFitWindow, Mode=TwoWay}" />
+        <MenuItem Header="幅に合わせる" ToggleType="Radio" GroupName="Fit" IsChecked="{Binding IsFitWidth, Mode=TwoWay}" />
+        <MenuItem Header="高さに合わせる" ToggleType="Radio" GroupName="Fit" IsChecked="{Binding IsFitHeight, Mode=TwoWay}" />
+        <MenuItem Header="原寸" ToggleType="Radio" GroupName="Fit" IsChecked="{Binding IsFitOriginal, Mode=TwoWay}" />
+        <Separator />
+        <MenuItem Header="拡大" InputGesture="Ctrl+OemPlus" Click="OnZoomInClick" />
+        <MenuItem Header="縮小" InputGesture="Ctrl+OemMinus" Click="OnZoomOutClick" />
+        <Separator />
+        <MenuItem Header="フルスクリーン" InputGesture="F" Click="OnFullScreenClick" />
+      </MenuItem>
+      <MenuItem Header="設定(_S)">
+        <MenuItem Header="背景色">
+          <MenuItem Header="黒" Command="{Binding SetBackgroundCommand}" CommandParameter="#000000" />
+          <MenuItem Header="濃いグレー" Command="{Binding SetBackgroundCommand}" CommandParameter="#303030" />
+          <MenuItem Header="グレー" Command="{Binding SetBackgroundCommand}" CommandParameter="#808080" />
+          <MenuItem Header="白" Command="{Binding SetBackgroundCommand}" CommandParameter="#FFFFFF" />
+        </MenuItem>
+        <MenuItem Header="縮小時の補間品質">
+          <MenuItem Header="低（ニアレストネイバー）" ToggleType="Radio" GroupName="Interp" IsChecked="{Binding IsInterpolationLow, Mode=TwoWay}" />
+          <MenuItem Header="中（バイリニア）" ToggleType="Radio" GroupName="Interp" IsChecked="{Binding IsInterpolationMedium, Mode=TwoWay}" />
+          <MenuItem Header="高（ミップマップ / バイキュービック）" ToggleType="Radio" GroupName="Interp" IsChecked="{Binding IsInterpolationHigh, Mode=TwoWay}" />
+        </MenuItem>
+        <MenuItem x:Name="PrefetchMenu" Header="先読みページ数" />
+        <MenuItem x:Name="CacheMenu" Header="キャッシュ上限" />
+        <Separator />
+        <MenuItem Header="デフォルト設定（記録のないファイル）">
+          <MenuItem Header="単ページ" ToggleType="Radio" GroupName="DefaultViewMode" IsChecked="{Binding IsDefaultSingle, Mode=TwoWay}" />
+          <MenuItem Header="見開き" ToggleType="Radio" GroupName="DefaultViewMode" IsChecked="{Binding IsDefaultSpread, Mode=TwoWay}" />
+          <Separator />
+          <MenuItem Header="右読み（右綴じ）" ToggleType="Radio" GroupName="DefaultDirection" IsChecked="{Binding IsDefaultRightToLeft, Mode=TwoWay}" />
+          <MenuItem Header="左読み（左綴じ）" ToggleType="Radio" GroupName="DefaultDirection" IsChecked="{Binding IsDefaultLeftToRight, Mode=TwoWay}" />
+          <Separator />
+          <MenuItem Header="表紙単独表示" ToggleType="CheckBox" IsChecked="{Binding DefaultCoverSingle, Mode=TwoWay}" />
+        </MenuItem>
+      </MenuItem>
+    </Menu>
+
+    <Border DockPanel.Dock="Bottom" IsVisible="{Binding IsChromeVisible}" Padding="12,2" Background="#CC202020">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Right" Text="{Binding PageText}" VerticalAlignment="Center" MinWidth="110"
+                   TextAlignment="Right" Margin="12,0,0,0" Foreground="#E0E0E0" />
+        <Slider x:Name="SeekBar" Minimum="1" Maximum="{Binding PageCount}" Value="{Binding SeekPage}"
+                IsDirectionReversed="{Binding IsSeekReversed}" IsEnabled="{Binding HasDocument}"
+                SmallChange="1" LargeChange="10" IsSnapToTickEnabled="True" TickFrequency="1" Focusable="False" />
+      </DockPanel>
+    </Border>
+
+    <Panel>
+      <c:PageView x:Name="PageView"
+                  Pages="{Binding DisplayedPages}"
+                  Direction="{Binding Direction}"
+                  FitMode="{Binding FitMode}"
+                  BackgroundColor="{Binding BackgroundColor}"
+                  Interpolation="{Binding Interpolation}" />
+      <Border IsVisible="{Binding HasMessage}" IsHitTestVisible="False" HorizontalAlignment="Center" VerticalAlignment="Center"
+              Background="#CC202020" CornerRadius="8" Padding="24,16">
+        <TextBlock Text="{Binding Message}" Foreground="#F0F0F0" FontSize="15" TextWrapping="Wrap" TextAlignment="Center" />
+      </Border>
+      <Border IsVisible="{Binding HasToast}" IsHitTestVisible="False" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+              Margin="0,0,0,32" Background="#E0202020" CornerRadius="6" Padding="16,8">
+        <TextBlock Text="{Binding Toast}" Foreground="#F0F0F0" />
+      </Border>
+    </Panel>
+  </DockPanel>
+</Window>

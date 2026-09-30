@@ -4,6 +4,7 @@
     <AssemblyName>MangaViewer</AssemblyName>
     <RootNamespace>MangaViewer</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets/AppIcon.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <NoWarn>$(NoWarn);CA1416</NoWarn>
   </PropertyGroup>
@@ -19,6 +20,9 @@
     <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.119.4" />
     <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="3.119.4" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets/**" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../MangaViewer.Core/MangaViewer.Core.csproj" />

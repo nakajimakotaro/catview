@@ -42,8 +42,8 @@ dotnet publish src/MangaViewer -c Release -r osx-arm64 --self-contained   # win-
 
 ## ファイルの関連付け
 
-- **macOS**：`.app` バンドルを作成し、[packaging/macos/Info.plist](packaging/macos/Info.plist) を `Contents/Info.plist` として配置する。Finder から開いたファイルはアプリ側で受け取る。
-- **Linux**：[packaging/linux/mangaviewer.desktop](packaging/linux/mangaviewer.desktop) を `~/.local/share/applications/` に配置する。
+- **macOS**：`.app` バンドルを作成し、[packaging/macos/Info.plist](packaging/macos/Info.plist) を `Contents/Info.plist` として配置する。アイコン [packaging/macos/AppIcon.icns](packaging/macos/AppIcon.icns) は `Contents/Resources/` に配置する。Finder から開いたファイルはアプリ側で受け取る。
+- **Linux**：[packaging/linux/mangaviewer.desktop](packaging/linux/mangaviewer.desktop) を `~/.local/share/applications/` に配置する。アイコン [packaging/linux/mangaviewer.png](packaging/linux/mangaviewer.png) は `~/.local/share/icons/hicolor/256x256/apps/` に配置する。
 - **Windows**：インストーラ（MSIX / Inno Setup など）で `.zip` / `.cbz` / `.pdf` の関連付けを登録し、`MangaViewer.exe "%1"` で起動させる。
 
 ## 保存場所

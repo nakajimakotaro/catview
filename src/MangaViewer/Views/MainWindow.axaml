@@ -5,6 +5,7 @@
         x:Class="MangaViewer.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="{Binding Title}"
+        Icon="/Assets/AppIcon.ico"
         Width="1200" Height="900"
         MinWidth="320" MinHeight="240"
         Background="{Binding BackgroundColor, Converter={x:Static c:ColorToBrushConverter.Instance}}"

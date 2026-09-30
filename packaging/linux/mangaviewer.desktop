@@ -3,6 +3,7 @@ Type=Application
 Name=MangaViewer
 Comment=PDF / ZIP / 画像のマンガビューア
 Exec=MangaViewer %f
+Icon=mangaviewer
 Terminal=false
 Categories=Graphics;Viewer;
 MimeType=application/zip;application/vnd.comicbook+zip;application/x-cbz;application/pdf;

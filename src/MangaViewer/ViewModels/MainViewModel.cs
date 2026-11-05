@@ -31,6 +31,11 @@ public sealed partial class MainViewModel : ObservableObject
     private bool _updatingSeek;
     private bool _isShutDown;
 
+    // 最終ページから先へ進もうとしたときの状態。フォルダの中身は変わりうるので検索結果は保持せず、毎回探し直す
+    private bool _searchingNextFile;
+    private DateTime? _endNoticeShownAt;
+    private static readonly TimeSpan EndNoticeMinInterval = TimeSpan.FromMilliseconds(400);
+
     public MainViewModel(AppSettings settings, HistoryStore history)
     {
         _settings = settings;
@@ -411,6 +416,7 @@ public sealed partial class MainViewModel : ObservableObject
         _source?.Dispose();
         _source = null;
         _recordPath = null;
+        _endNoticeShownAt = null;
         _sizes = [];
         _units = [];
         CurrentUnitIndex = -1;
@@ -427,13 +433,66 @@ public sealed partial class MainViewModel : ObservableObject
     private async Task OpenSiblingAsync(int delta)
     {
         if (_source is null) return;
-        var sibling = FileNavigator.FindSibling(_source.Path, delta);
+        var generation = _openGeneration;
+        var sibling = await FindSiblingInBackground(_source.Path, delta);
+        if (generation != _openGeneration) return;
         if (sibling is null)
         {
             ShowToast(delta > 0 ? "次のファイルはありません" : "前のファイルはありません");
             return;
         }
         await OpenAsync(sibling);
+    }
+
+    /// <summary>フォルダの列挙は遅い場合がある（ネットワークドライブなど）ので UI スレッドの外で行う。</summary>
+    private static Task<string?> FindSiblingInBackground(string path, int delta) =>
+        Task.Run(() =>
+        {
+            try
+            {
+                return FileNavigator.FindSibling(path, delta);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                return null;
+            }
+        });
+
+    /// <summary>
+    /// 最終ページでさらに進もうとしたとき：1 回目は次のファイル名を案内し、もう一度進むとそのファイルを開く。
+    /// ホイールやクリックの連打で意図せず次のファイルへ移らないよう、案内直後の入力は無視する。
+    /// </summary>
+    private async void AdvancePastEnd()
+    {
+        // 検索中の入力は無視する（連打で検索が積み重ならないように）
+        if (_source is null || _searchingNextFile) return;
+        var generation = _openGeneration;
+        string? next;
+        _searchingNextFile = true;
+        try
+        {
+            next = await FindSiblingInBackground(_source.Path, 1);
+        }
+        finally
+        {
+            _searchingNextFile = false;
+        }
+        if (generation != _openGeneration || _source is null || CurrentUnitIndex != _units.Count - 1) return;
+
+        if (next is null)
+        {
+            ShowToast("最後のページです（次のファイルはありません）");
+            return;
+        }
+        var now = DateTime.UtcNow;
+        if (_endNoticeShownAt is not { } shownAt)
+        {
+            _endNoticeShownAt = now;
+            ShowToast($"最後のページです。もう一度進むと次のファイルを開きます\n{Path.GetFileName(next)}");
+            return;
+        }
+        if (now - shownAt < EndNoticeMinInterval) return;
+        await OpenAsync(next);
     }
 
     public void Shutdown()
@@ -452,6 +511,7 @@ public sealed partial class MainViewModel : ObservableObject
     public void NextPage()
     {
         if (CurrentUnitIndex < _units.Count - 1) ShowUnit(CurrentUnitIndex + 1);
+        else if (_units.Count > 0) AdvancePastEnd();
     }
 
     [RelayCommand]
@@ -565,6 +625,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             return;
         }
+        if (index != CurrentUnitIndex) _endNoticeShownAt = null;
         CurrentUnitIndex = index;
         var unit = _units[index];
         _cache.SetPosition(unit.Start);

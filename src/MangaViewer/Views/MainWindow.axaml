@@ -93,7 +93,7 @@
       </Border>
       <Border IsVisible="{Binding HasToast}" IsHitTestVisible="False" HorizontalAlignment="Center" VerticalAlignment="Bottom"
               Margin="0,0,0,32" Background="#E0202020" CornerRadius="6" Padding="16,8">
-        <TextBlock Text="{Binding Toast}" Foreground="#F0F0F0" />
+        <TextBlock Text="{Binding Toast}" Foreground="#F0F0F0" TextAlignment="Center" />
       </Border>
     </Panel>
   </DockPanel>

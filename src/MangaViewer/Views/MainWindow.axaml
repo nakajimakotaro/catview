@@ -70,17 +70,7 @@
       </MenuItem>
     </Menu>
 
-    <Border DockPanel.Dock="Bottom" IsVisible="{Binding IsChromeVisible}" Padding="12,2" Background="#CC202020">
-      <DockPanel>
-        <TextBlock DockPanel.Dock="Right" Text="{Binding PageText}" VerticalAlignment="Center" MinWidth="110"
-                   TextAlignment="Right" Margin="12,0,0,0" Foreground="#E0E0E0" />
-        <Slider x:Name="SeekBar" Minimum="1" Maximum="{Binding PageCount}" Value="{Binding SeekPage}"
-                IsDirectionReversed="{Binding IsSeekReversed}" IsEnabled="{Binding HasDocument}"
-                SmallChange="1" LargeChange="10" IsSnapToTickEnabled="True" TickFrequency="1" Focusable="False" />
-      </DockPanel>
-    </Border>
-
-    <Panel>
+    <Panel x:Name="ContentPanel">
       <c:PageView x:Name="PageView"
                   Pages="{Binding DisplayedPages}"
                   Direction="{Binding Direction}"
@@ -94,6 +84,16 @@
       <Border IsVisible="{Binding HasToast}" IsHitTestVisible="False" HorizontalAlignment="Center" VerticalAlignment="Bottom"
               Margin="0,0,0,32" Background="#E0202020" CornerRadius="6" Padding="16,8">
         <TextBlock Text="{Binding Toast}" Foreground="#F0F0F0" TextAlignment="Center" />
+      </Border>
+      <!-- ページシークバー：普段は隠し、マウスを下端に近づけたときだけ表示する -->
+      <Border x:Name="SeekBarPanel" IsVisible="False" VerticalAlignment="Bottom" Padding="12,2" Background="#CC202020">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Right" Text="{Binding PageText}" VerticalAlignment="Center" MinWidth="110"
+                     TextAlignment="Right" Margin="12,0,0,0" Foreground="#E0E0E0" />
+          <Slider x:Name="SeekBar" Minimum="1" Maximum="{Binding PageCount}" Value="{Binding SeekPage}"
+                  IsDirectionReversed="{Binding IsSeekReversed}" IsEnabled="{Binding HasDocument}"
+                  SmallChange="1" LargeChange="10" IsSnapToTickEnabled="True" TickFrequency="1" Focusable="False" />
+        </DockPanel>
       </Border>
     </Panel>
   </DockPanel>

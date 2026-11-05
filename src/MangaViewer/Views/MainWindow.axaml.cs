@@ -3,6 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using MangaViewer.Core;
 using MangaViewer.Core.Imaging;
 using MangaViewer.Core.Persistence;
@@ -18,6 +20,10 @@ public partial class MainWindow : Window
     private WindowState _stateBeforeFullScreen = WindowState.Normal;
     private PixelPoint _normalPosition;
     private Size _normalSize;
+
+    // シークバーを表示する下端からの距離と、離れてから隠すまでの時間
+    private const double SeekBarRevealDistance = 72;
+    private readonly DispatcherTimer _seekBarHideTimer = new() { Interval = TimeSpan.FromMilliseconds(600) };
 
     public MainWindow()
     {
@@ -39,6 +45,40 @@ public partial class MainWindow : Window
 
         PositionChanged += (_, _) => RememberNormalBounds();
         SizeChanged += (_, _) => RememberNormalBounds();
+
+        // ページビューがポインタを処理済みにしても受け取れるよう、トンネルかつ handledEventsToo で監視する
+        AddHandler(PointerMovedEvent, OnAnyPointerMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
+        ContentPanel.PointerExited += (_, _) => ScheduleSeekBarHide();
+        _seekBarHideTimer.Tick += (_, _) =>
+        {
+            _seekBarHideTimer.Stop();
+            SeekBarPanel.IsVisible = false;
+        };
+    }
+
+    // ---- シークバーの自動表示 ----
+
+    private void OnAnyPointerMoved(object? sender, PointerEventArgs e)
+    {
+        var y = e.GetPosition(ContentPanel).Y;
+        var nearBottom = y >= ContentPanel.Bounds.Height - SeekBarRevealDistance && y <= ContentPanel.Bounds.Height;
+        // つまみをドラッグ中は、ポインタが上に外れても隠さない
+        var dragging = e.Pointer.Captured is Visual captured && SeekBarPanel.IsVisualAncestorOf(captured);
+
+        if ((nearBottom && ViewModel?.HasDocument == true) || dragging)
+        {
+            _seekBarHideTimer.Stop();
+            SeekBarPanel.IsVisible = true;
+        }
+        else
+        {
+            ScheduleSeekBarHide();
+        }
+    }
+
+    private void ScheduleSeekBarHide()
+    {
+        if (SeekBarPanel.IsVisible && !_seekBarHideTimer.IsEnabled) _seekBarHideTimer.Start();
     }
 
     private MainViewModel? ViewModel => DataContext as MainViewModel;
